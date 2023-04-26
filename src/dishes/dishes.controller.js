@@ -11,22 +11,10 @@ function list(req, res) {
   res.json({ data: dishes });
 }
 
-function create(req, res){
-    const { data : { name, description, price, image_url} = {} } = req.body
-    const newDish = {
-        id: ++nextId,
-        name,
-        description,
-        price,
-        image_url,
-    }
-    dishes.push(newDish)
-    res.status(201).json({data: newDish})
-}
-
 function bodyDataHas(propertyName) {
   return function (req, res, next) {
     const { data = {} } = req.body;
+    res.locals.reqBody = data;
     if (data[propertyName]) {
       return next();
     }
@@ -48,6 +36,15 @@ function priceIsValidNumber(req, res, next) {
   next();
 }
 
+function create(req, res) {
+  const reqBody = res.locals.reqBody;
+  const newDish = {
+    ...reqBody,
+    id: nextId(),
+  };
+  dishes.push(newDish);
+  res.status(201).json({ data: newDish });
+}
 
 
 module.exports = {
@@ -57,6 +54,7 @@ module.exports = {
     bodyDataHas("price"),
     bodyDataHas("image_url"),
     priceIsValidNumber,
+    create,
   ],
   list,
 };
