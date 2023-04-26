@@ -51,7 +51,7 @@ function read(req, res) {
 }
 
 function dishExists(req, res, next) {
-  const dishId = Number(req.params.dishId);
+  const { dishId } = req.params;
   const foundDish = dishes.find((dish) => dish.id === dishId);
   if (foundDish) {
     res.locals.dish = foundDish;
@@ -63,6 +63,36 @@ function dishExists(req, res, next) {
   });
 }
 
+function matchIdWithDishId(req, res, next) {
+  const { dishId } = req.params;
+  const { data: { id } = {} } = req.body;
+
+  if (id && id !== dishId) {
+    next({
+      status: 400,
+      message: `Dish id does not match route id. Dish: ${id}, Route: ${dishId}`,
+    });
+  }
+  next();
+}
+
+function update(req, res) {
+  const dish = res.locals.dish;
+  const { data: { name, description, price, image_url } = {} } = req.body;
+  dish.name = name;
+  dish.description = description;
+  dish.price = price;
+  dish.image_url = image_url;
+
+  res.json({ data: dish });
+}
+
+function destroy(req, res) {
+  const { dishId } = req.params;
+  const index = dishes.findIndex((dish) => dish.id === Number(dishId));
+  const deletedDishes = dishes.splice(index, 1);
+  res.sendStatus(204);
+}
 module.exports = {
   create: [
     bodyDataHas("name"),
@@ -73,8 +103,16 @@ module.exports = {
     create,
   ],
   list,
-  read: [
-    dishExists, 
-    read
-],
+  read: [dishExists, read],
+  update: [
+    dishExists,
+    bodyDataHas("name"),
+    bodyDataHas("description"),
+    bodyDataHas("price"),
+    bodyDataHas("image_url"),
+    priceIsValidNumber,
+    matchIdWithDishId,
+    update,
+  ],
+  delete: [dishExists, destroy],
 };
