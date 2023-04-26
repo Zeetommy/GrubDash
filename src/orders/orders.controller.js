@@ -35,6 +35,34 @@ function create(req, res) {
   orders.push(newOrder);
   res.status(201).json({ data: newOrder});
 }
+
+function orderExists(req, res, next) {
+  const { orderId } = req.params;
+  const foundOrder = orders.find((order) => order.id === orderId);
+  if (foundOrder) {
+    res.locals.dish = foundOrder;
+    return next();
+  }
+  next({
+    status: 404,
+    message: `Order id not found: ${req.params.orderId}`,
+  });
+}
+
+function read(req, res) {
+    res.json({ data: res.locals.dish });
+}
+
+function update(req, res) {
+  const order = res.locals.order;
+  const { data: { deliverTo, mobileNumber, status, dishes } = {} } = req.body;
+  order.deliverTo = deliverTo;
+  order.mobileNumber = mobileNumber;
+  order.status = status;
+  order.dishes = dishes;
+
+  res.json({ data: order });
+}
 module.exports = {
   create: [
     bodyDataHas("deliverTo"),
@@ -42,8 +70,18 @@ module.exports = {
     bodyDataHas("status"),
     bodyDataHas("dishes"),
     bodyDataHas("dish"),
-    create
+    create,
   ],
   list,
+  read: [orderExists, read],
+  update: [
+    orderExists,
+    bodyDataHas("deliverTo"),
+    bodyDataHas("mobileNumber"),
+    bodyDataHas("status"),
+    bodyDataHas("dishes"),
+    bodyDataHas("dish"),
+    update
+  ],
 };
 
