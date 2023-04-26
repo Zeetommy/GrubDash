@@ -87,12 +87,6 @@ function update(req, res) {
   res.json({ data: dish });
 }
 
-function destroy(req, res) {
-  const { dishId } = req.params;
-  const index = dishes.findIndex((dish) => dish.id === Number(dishId));
-  const deletedDishes = dishes.splice(index, 1);
-  res.sendStatus(204);
-}
 module.exports = {
   create: [
     bodyDataHas("name"),
@@ -114,5 +108,7 @@ module.exports = {
     matchIdWithDishId,
     update,
   ],
-  delete: [dishExists, destroy],
+  delete: [
+    dishExists
+  ],
 };
