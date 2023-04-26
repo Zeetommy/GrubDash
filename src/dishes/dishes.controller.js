@@ -46,6 +46,22 @@ function create(req, res) {
   res.status(201).json({ data: newDish });
 }
 
+function read(req, res) {
+  res.json({ data: res.locals.dish });
+}
+
+function dishExists(req, res, next) {
+  const dishId = Number(req.params.dishId);
+  const foundDish = dishes.find((dish) => dish.id === dishId);
+  if (foundDish) {
+    res.locals.dish = foundDish;
+    return next();
+  }
+  next({
+    status: 404,
+    message: `Dish id not found: ${req.params.dishId}`,
+  });
+}
 
 module.exports = {
   create: [
@@ -57,4 +73,8 @@ module.exports = {
     create,
   ],
   list,
+  read: [
+    dishExists, 
+    read
+],
 };
