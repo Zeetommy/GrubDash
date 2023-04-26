@@ -12,7 +12,7 @@ function list(req, res) {
 }
 
 function create(req, res){
-    const { data : { id, name, description, price, image_url} = {} } = req.body
+    const { data : { name, description, price, image_url} = {} } = req.body
     const newDish = {
         id: ++nextId,
         name,
@@ -37,14 +37,26 @@ function bodyDataHas(propertyName) {
   };
 }
 
+function priceIsValidNumber(req, res, next) {
+  const { data: { price } = {} } = req.body;
+  if (price <= 0 || !Number.isInteger(price)) {
+    return next({
+      status: 400,
+      message: `price`,
+    });
+  }
+  next();
+}
+
 
 
 module.exports = {
-list,
-create: [
+  create: [
     bodyDataHas("name"),
     bodyDataHas("description"),
     bodyDataHas("price"),
     bodyDataHas("image_url"),
-],
-}
+    priceIsValidNumber,
+  ],
+  list,
+};
